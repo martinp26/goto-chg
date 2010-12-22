@@ -255,7 +255,8 @@ discarded. See variable `undo-limit'."
 	(n 0)				; Steps in undo list (length of 'rev')
 	(l buffer-undo-list) 
 	(passed-save-entry (not (buffer-modified-p)))
-	(new-probe-depth glc-probe-depth))
+	(new-probe-depth glc-probe-depth)
+        glc-seen-canary)
     ;; Walk back and forth in the buffer-undo-list, each time one step deeper,
     ;; until we can walk back the whole list with a 'pos' that is not coming
     ;; too close to another edit.
@@ -272,16 +273,33 @@ discarded. See variable `undo-limit'."
 	  (message "working..."))
       ;; Walk forward in buffer-undo-list, glc-probe-depth steps.
       ;; Build reverse list along the way
-      (while (< n new-probe-depth)
-	(cond ((null l)
+      (when (not glc-seen-canary)
+        (while (and (not (null l)) (not glc-seen-canary) (< n new-probe-depth))
+          (cond ((eq 'undo-tree-canary (car l))  ; used by buffer-undo-tree
+                 (message "Canary found...")
+                 (setq l (undo-tree-current buffer-undo-tree)
+                       glc-seen-canary t))
+                ((glc-is-positionable (car l))
+                 (setq n (1+ n)
+                       rev (cons (car l) rev)))
+                ((or passed-save-entry (glc-is-filetime (car l)))
+                 (setq passed-save-entry t)))
+          (when (not glc-seen-canary)
+            (setq l (cdr l)))))
+      (when glc-seen-canary
+        (while (< n new-probe-depth)
+          (cond ((null l)
 	       ;(setq this-command t)	; Disrupt repeat sequence
 	       (error "No further change info"))
-	      ((glc-is-positionable (car l))
+	      ((glc-is-positionable (car (undo-tree-node-undo l)))
 	       (setq n (1+ n)
-		     rev (cons (car l) rev)))
-	      ((or passed-save-entry (glc-is-filetime (car l)))
+		     rev (cons (car (undo-tree-node-undo l)) rev)))
+	      ((or passed-save-entry (glc-is-filetime (car (undo-tree-node-undo) l)))
 	       (setq passed-save-entry t)))
-	(setq l (cdr l)))
+          (setq l (undo-tree-node-previous l))))
+      (when (null l)
+        (error "No further change info"))
+        
       ;; Walk back in reverse list, from older to newer edits.
       ;; Adjusting pos along the way.
       (setq pos (glc-adjust-list rev)))
