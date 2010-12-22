@@ -2,6 +2,7 @@
 ;;--------------------------------------------------------------------
 ;;
 ;; Copyright (C) 2002-2008, David Andersson
+;; Copyright (C) 2010 Martin Pohlack
 ;;
 ;; This program is free software; you can redistribute it and/or
 ;; modify it under the terms of the GNU General Public License as
@@ -22,7 +23,7 @@
 ;;
 ;; Author: David Andersson <l.david.andersson(at)sverige.nu>
 ;; Created: 16 May 2002
-;; Version: 1.4
+;; Version: 1.5
 ;;
 ;;; Commentary:
 ;;
@@ -47,6 +48,8 @@
 ;;--------------------------------------------------------------------
 ;; History
 ;;
+;; Ver 1.5 2010-12-22 Martin Pohlack
+;;    Adapted to undo-tree-mode
 ;; Ver 1.4 2008-09-20 David Andersson
 ;;    Improved property change description; Update comments.
 ;; Ver 1.3 2007-03-14 David Andersson
